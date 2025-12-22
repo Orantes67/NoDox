@@ -1,0 +1,45 @@
+nodox:
+  version: "0.1"
+
+paths:
+  scan_path: "."
+  canary_path: "."
+  encrypt_path: "."
+  decrypt_path: "."
+
+scanner:
+  max_file_size_mb: 2
+  ignored_extensions:
+    - ".png"
+    - ".jpg"
+    - ".jpeg"
+    - ".gif"
+    - ".pdf"
+    - ".zip"
+    - ".rar"
+    - ".exe"
+    - ".bin"
+    - ".iso"
+
+encryptor:
+  encrypted_extension: ".nodox"
+  use_env_key: true
+  env_key_name: "NODOX_KEY"
+
+canary:
+  directory: ".nodox_canary"
+  check_interval_seconds: 5
+  files:
+    - "clientes_2025_CONFIDENCIAL.xlsx"
+    - "passwords_admin.txt"
+    - "contratos_privados.docx"
+    - "backup_db.sql"
+
+exfiltration:
+  check_interval_seconds: 5
+  threshold_mb: 50
+
+logging:
+  enabled: true
+  level: "INFO"
+  file: "logs/nodox.log"

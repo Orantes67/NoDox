@@ -1,0 +1,31 @@
+# Directorios y archivos a excluir del escaneo
+# Los paths pueden ser absolutos o relativos
+
+# Sistema
+.git/
+.venv/
+venv/
+__pycache__/
+.vscode/
+.idea/
+
+# Logs y temporal
+logs/
+.nodox_canary/
+
+# Archivos de sistema
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+Thumbs.db
+
+# Distribución y empaquetado
+build/
+dist/
+*.egg-info/
+
+# IDE
+*.swp
+*.swo
+*~
