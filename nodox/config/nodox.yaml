@@ -1,5 +1,5 @@
 nodox:
-  version: "0.1"
+  version: "0.2"
 
 paths:
   scan_path: "."
@@ -20,11 +20,18 @@ scanner:
     - ".exe"
     - ".bin"
     - ".iso"
+    - ".nodox"
 
 encryptor:
   encrypted_extension: ".nodox"
   use_env_key: true
   env_key_name: "NODOX_KEY"
+  # Crear backup antes de cifrar (recomendado)
+  create_backup: true
+  backup_dir: ".nodox_backups"
+  # Usar derivación de clave PBKDF2 (más seguro pero más lento)
+  # Si es true, NODOX_KEY puede ser una contraseña simple
+  use_key_derivation: false
 
 canary:
   directory: ".nodox_canary"

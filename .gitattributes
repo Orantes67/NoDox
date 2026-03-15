@@ -1,0 +1,50 @@
+# ===========================================
+# NoDox .gitattributes
+# Configuración de finales de línea para Git
+# ===========================================
+
+# Configuración por defecto
+* text=auto
+
+# Archivos de texto - normalizar a LF en el repo
+*.py text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.rst text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+
+# Scripts de shell - siempre LF (Unix)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Scripts de Windows - siempre CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Dockerfile
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+
+# Archivos binarios - no modificar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+# Archivos cifrados por NoDox - binarios
+*.nodox binary

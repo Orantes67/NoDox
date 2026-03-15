@@ -1,0 +1,140 @@
+# ===========================================
+# NoDox .gitignore
+# ===========================================
+
+# ============ ARCHIVOS SENSIBLES ============
+# NUNCA subir estos archivos al repositorio
+
+# Claves y secretos
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.crt
+secrets/
+NODOX_KEY*
+
+# Archivos cifrados por NoDox
+*.nodox
+
+# Backups de NoDox
+*.nodox.bak
+backups/
+.nodox_backups/
+
+# Canary files (contienen datos ficticios pero sensibles)
+.nodox_canary/
+
+# ============ PYTHON ============
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+*.whl
+MANIFEST
+
+# PyInstaller
+*.spec
+*.exe
+output/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ============ LOGS ============
+logs/
+*.log
+*.log.*
+
+# ============ IDE / EDITOR ============
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.#*
+
+# ============ OS ============
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# ============ TESTING ============
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+
+# ============ MISC ============
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Documentation builds
+docs/_build/
+site/

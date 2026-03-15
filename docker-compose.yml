@@ -1,0 +1,89 @@
+# Docker Compose para NoDox
+# Uso: docker-compose up -d
+# 
+# Este archivo configura NoDox para ejecutarse en contenedores Docker.
+# Incluye monitoreo continuo y persistencia de logs.
+
+services:
+  nodox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodox-protect
+    restart: unless-stopped
+    environment:
+      - NODOX_KEY=${NODOX_KEY}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Directorio a proteger (MODIFICAR según necesidades)
+      - ./data:/app/data:rw
+      # Logs persistentes
+      - ./logs:/app/logs:rw
+      # Configuración personalizada (opcional)
+      - ./nodox/config/nodox.yaml:/app/nodox/config/nodox.yaml:ro
+    working_dir: /app
+    command: ["python", "nodox.py", "protect"]
+    # Limitar recursos
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "python", "-c", "import psutil; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Servicio opcional para escaneo bajo demanda
+  nodox-scan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodox-scan
+    profiles:
+      - scan  # Solo se inicia con: docker-compose --profile scan up
+    environment:
+      - NODOX_KEY=${NODOX_KEY}
+    volumes:
+      - ./data:/app/data:ro
+      - ./logs:/app/logs:rw
+    working_dir: /app
+    command: ["python", "nodox.py", "scan", "-p", "/app/data"]
+
+  # Servicio opcional para descifrado
+  nodox-decrypt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodox-decrypt
+    profiles:
+      - decrypt  # Solo se inicia con: docker-compose --profile decrypt up
+    environment:
+      - NODOX_KEY=${NODOX_KEY}
+    volumes:
+      - ./data:/app/data:rw
+      - ./logs:/app/logs:rw
+    working_dir: /app
+    command: ["python", "nodox.py", "decrypt", "-p", "/app/data"]
+
+# Redes
+networks:
+  default:
+    name: nodox-network
+
+# Volúmenes nombrados (opcional)
+volumes:
+  nodox-logs:
+    driver: local

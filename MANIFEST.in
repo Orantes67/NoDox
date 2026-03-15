@@ -1,0 +1,35 @@
+# MANIFEST.in - Archivos adicionales para distribución PyPI
+
+# Incluir documentación
+include README.md
+include QUICKSTART.md
+include WINDOWS_TROUBLESHOOTING.md
+include LICENSE
+
+# Incluir archivos de configuración
+include nodox/config/nodox.yaml
+include nodox/config/exclusions.txt
+
+# Incluir requirements
+include requirements.txt
+
+# Incluir ejemplos
+include .env.example
+
+# Excluir archivos sensibles y de desarrollo
+exclude .env
+exclude .env.local
+exclude *.nodox
+exclude *.bak
+
+# Excluir directorios de desarrollo
+prune .git
+prune .venv
+prune __pycache__
+prune logs
+prune build
+prune dist
+prune .nodox_canary
+prune .nodox_backups
+prune .pytest_cache
+prune htmlcov
