@@ -39,21 +39,28 @@ NoDox cambia el enfoque defensivo:
 
 Detecta archivos que pueden contener:
 
-- Información personal (PII)
-- Datos críticos
-- Archivos de alto valor para extorsión
+- Información personal (PII): emails, RFC, CURP, SSN
+- **Tarjetas de crédito** con validación Luhn (Visa, MasterCard, Amex)
+- **API Keys**: AWS, Google, GitHub, Slack
+- **Contraseñas hardcodeadas** en código
+- **Claves privadas** RSA/DSA/EC
+- **JWT Tokens** y credenciales expuestas
 
 ### 🔐 Cifrado previo (Data-at-Rest)
 
 - Cifra archivos sensibles antes de que un atacante pueda robarlos
 - Incluso si son exfiltrados, resultan inutilizables
-- Usa encriptación Fernet (simétrica)
+- Usa encriptación **Fernet** (simétrica)
+- **NUEVO**: Derivación de clave PBKDF2 (480,000 iteraciones)
+- **NUEVO**: Backup automático antes de cifrar
+- **NUEVO**: Verificación de integridad SHA-256
 
 ### 🐦 Canary Files
 
 - Archivos señuelo que nadie debería tocar
 - Si son modificados → alerta inmediata
 - Detección temprana de ransomware
+- **NUEVO**: Parada limpia con señales de threading
 
 ### 📡 Detección de exfiltración
 
@@ -87,19 +94,24 @@ Diseñado para ser el modo recomendado de uso.
 ```
 nodox/
 ├── core/
-│   ├── scanner.py        # Detección de datos sensibles
-│   ├── encryptor.py      # Cifrado de archivos
-│   ├── decryptor.py      # Descifrado de archivos
-│   ├── canary.py         # Archivos señuelo
+│   ├── scanner.py        # Detección de datos sensibles (15+ patrones)
+│   ├── encryptor.py      # Cifrado con backup y checksum
+│   ├── decryptor.py      # Descifrado con verificación de integridad
+│   ├── canary.py         # Archivos señuelo con parada limpia
 │   ├── exfil.py          # Monitoreo de exfiltración
 │   ├── protect.py        # Orquestación del modo protect
-│   ├── config_loader.py  # Carga de configuración YAML
-│   └── logger.py         # Sistema de logging
+│   ├── config_loader.py  # Carga de configuración YAML (con cache)
+│   └── logger.py         # Sistema de logging rotativo
 ├── config/
-│   └── nodox.yaml        # Configuración centralizada
+│   ├── nodox.yaml        # Configuración centralizada
+│   └── exclusions.txt    # Archivos/carpetas a excluir
 ├── logs/
 │   └── nodox.log         # Logs rotatorios
-└── nodox.py              # Punto de entrada CLI
+├── nodox.py              # Punto de entrada CLI
+├── pyproject.toml        # Configuración PyPI moderna
+├── setup.py              # Compatibilidad legacy
+├── docker-compose.yml    # Despliegue Docker
+└── nodox.spec            # PyInstaller spec
 ```
 
 ---
@@ -196,7 +208,7 @@ python nodox.py protect
 1. Generar una clave de cifrado Fernet:
 
 ```bash
-python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+python generate_key.py
 ```
 
 ### Construir imagen
@@ -213,6 +225,28 @@ docker run -e NODOX_KEY="tu_clave_aqui" --rm nodox:latest
 
 Reemplaza `tu_clave_aqui` con la clave generada.
 
+### 🐳 Docker Compose (Recomendado para producción)
+
+```bash
+# Crear archivo .env con tu clave
+echo "NODOX_KEY=tu_clave_aqui" > .env
+
+# Iniciar servicio de protección continua
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f nodox
+
+# Ejecutar solo escaneo
+docker-compose --profile scan up
+
+# Ejecutar descifrado
+docker-compose --profile decrypt up
+
+# Detener
+docker-compose down
+```
+
 ### Ejecutar comandos específicos
 
 ```bash
@@ -225,13 +259,31 @@ docker run -e NODOX_KEY="tu_clave" --rm nodox:latest python nodox.py decrypt
 
 ---
 
+## 📦 Generar Ejecutable (PyInstaller)
+
+Genera un ejecutable standalone sin necesidad de Python instalado:
+
+**Windows:**
+```cmd
+build_exe.bat
+```
+
+**Linux/Mac:**
+```bash
+bash build_exe.sh
+```
+
+El ejecutable se genera en `dist/nodox/nodox.exe` (Windows) o `dist/nodox/nodox` (Unix).
+
+---
+
 ## ⚙️ Configuración
 
 NoDox usa `nodox/config/nodox.yaml` para configuración centralizada:
 
 ```yaml
 nodox:
-  version: "0.1"
+  version: "0.2"
 
 paths:
   scan_path: "."
@@ -247,11 +299,17 @@ scanner:
     - ".pdf"
     - ".zip"
     - ".exe"
+    - ".nodox"
 
 encryptor:
   encrypted_extension: ".nodox"
   use_env_key: true
   env_key_name: "NODOX_KEY"
+  # NUEVO: Backup automático antes de cifrar
+  create_backup: true
+  backup_dir: ".nodox_backups"
+  # NUEVO: Derivación de clave PBKDF2 (más seguro)
+  use_key_derivation: false
 
 canary:
   directory: ".nodox_canary"
@@ -276,10 +334,16 @@ logging:
 
 ## 📋 Requisitos
 
-- Python 3.12+
-- `cryptography` – Cifrado Fernet
+- Python 3.10+
+- `cryptography` – Cifrado Fernet + PBKDF2
 - `pyyaml` – Configuración
 - `psutil` – Monitoreo de red
+
+### 📦 Instalación desde PyPI (Próximamente)
+
+```bash
+pip install nodox
+```
 
 ### Instalación automática (RECOMENDADO)
 
@@ -313,6 +377,20 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Instalación en modo desarrollo
+
+```bash
+# Clonar repositorio
+git clone https://github.com/Orantes67/NoDox.git
+cd NoDox
+
+# Instalar como paquete editable
+pip install -e .
+
+# Ahora puedes usar:
+nodox protect
+```
+
 ---
 
 ## 🧑‍💻 Público objetivo
@@ -327,29 +405,50 @@ pip install -r requirements.txt
 
 ## 🧪 Estado del proyecto
 
-- 🚧 **Versión**: 0.1.0
-- 🚧 **Estado**: MVP funcional (CLI)
-- 🚧 **Lenguaje**: Python
+- ✅ **Versión**: 0.2.0
+- ✅ **Estado**: Beta funcional (CLI)
+- ✅ **Lenguaje**: Python 3.10+
+
+### ✅ Nuevas características en v0.2.0
+
+- 🔐 Derivación de claves con PBKDF2 (480,000 iteraciones)
+- 💾 Backup automático antes de cifrar
+- ✓ Verificación de integridad SHA-256
+- 🔍 15+ patrones de detección (API keys, tarjetas, etc.)
+- 📦 Soporte para PyPI, Docker Compose, PyInstaller
+- ⚙️ Configuración YAML dinámica
 
 ### Próximos objetivos
 
-- ✨ Alertas en tiempo real
+- ✨ Alertas en tiempo real (webhooks)
 - 📊 Dashboard visual
 - 🔌 Extensión de navegador (Chrome)
 - 📧 Notificaciones por email
 - 🔗 Integración con SIEM
-- 📱 Aplicación móvil
 
 ---
 
 ## 📊 Patrones de detección
 
-### Scanner detecta
+### Scanner detecta (15+ patrones)
 
-- **EMAIL**: Correos electrónicos
-- **RFC**: Identificadores fiscales mexicanos
-- **CURP**: Claves personales de identidad (MX)
-- **LONG_NUMBER**: Números largos (posibles tarjetas)
+| Patrón | Descripción | Severidad |
+|--------|-------------|----------|
+| `EMAIL` | Correos electrónicos | MEDIUM |
+| `RFC` | Identificadores fiscales (MX) | HIGH |
+| `CURP` | Clave personal de identidad (MX) | HIGH |
+| `CREDIT_CARD` | Visa, MasterCard, Amex (validación Luhn) | CRITICAL |
+| `SSN` | Social Security Number (USA) | CRITICAL |
+| `IBAN` | Cuentas bancarias internacionales | CRITICAL |
+| `AWS_KEY` | AWS Access Key ID | CRITICAL |
+| `AWS_SECRET` | AWS Secret Access Key | CRITICAL |
+| `GITHUB_TOKEN` | Tokens de GitHub (ghp_, gho_, etc.) | CRITICAL |
+| `GOOGLE_API_KEY` | API Keys de Google | HIGH |
+| `SLACK_TOKEN` | Tokens de Slack | HIGH |
+| `API_KEY` | Patrón genérico de API keys | HIGH |
+| `PASSWORD_IN_CODE` | Contraseñas hardcodeadas | CRITICAL |
+| `PRIVATE_KEY` | Claves privadas RSA/DSA/EC | CRITICAL |
+| `JWT_TOKEN` | JSON Web Tokens | HIGH |
 
 Fácilmente extensible para otros patrones.
 
@@ -357,11 +456,18 @@ Fácilmente extensible para otros patrones.
 
 ## 🔒 Seguridad
 
+### Características de seguridad
+
 - ✅ Encriptación Fernet (estándar de seguridad)
+- ✅ **PBKDF2 Key Derivation** (480,000 iteraciones) - opcional
+- ✅ **Verificación SHA-256** de integridad en cifrado/descifrado
+- ✅ **Backup automático** antes de cifrar (configurable)
+- ✅ **Escritura atómica** para evitar corrupción
 - ✅ Configuración centralizada
 - ✅ Logs auditables
 - ✅ No almacena claves en el código
 - ✅ Soporta variables de entorno
+- ✅ Validación de permisos en archivos `.env.local`
 
 **IMPORTANTE**: La clave debe estar protegida en sistemas de producción (vaults, secrets manager, etc.)
 
@@ -427,4 +533,4 @@ Desarrollado por la comunidad de ciberseguridad.
 
 ---
 
-**NoDox v0.1.0** © 2025 | MIT License
+**NoDox v0.2.0** © 2025-2026 | MIT License
