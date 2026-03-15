@@ -5,8 +5,17 @@ from nodox.core.logger import setup_logger
 from nodox.core.config_loader import load_config
 from nodox.core.scanner import scan_and_collect
 from nodox.core.encryptor import encrypt_file_list
-from nodox.core.canary import setup_canary_files, monitor_canary_files
-from nodox.core.exfil import monitor_exfiltration
+from nodox.core.canary import (
+    setup_canary_files, 
+    monitor_canary_files, 
+    stop_monitors as stop_canary_monitors,
+    reset_monitors as reset_canary_monitors
+)
+from nodox.core.exfil import (
+    monitor_exfiltration, 
+    stop_exfil_monitor,
+    reset_exfil_monitor
+)
 
 logger = setup_logger()
 
@@ -14,6 +23,10 @@ logger = setup_logger()
 def protect():
     try:
         logger.info("===== MODO PROTECT ACTIVADO =====")
+
+        # Reiniciar estados de monitores
+        reset_canary_monitors()
+        reset_exfil_monitor()
 
         config = load_config()
 
@@ -75,11 +88,18 @@ def protect():
                     break
         except KeyboardInterrupt:
             logger.info("⏹️  Deteniendo NoDox...")
+            
+            # Señalizar a todos los monitores que deben detenerse
+            stop_canary_monitors()
+            stop_exfil_monitor()
+            
             logger.info("Esperando threads...")
             
-            # Esperar a que los threads terminen (máximo 5 segundos)
+            # Esperar a que los threads terminen (máximo 5 segundos cada uno)
             for thread in threads:
                 thread.join(timeout=5)
+                if thread.is_alive():
+                    logger.warning(f"Thread {thread.name} no terminó a tiempo")
             
             logger.info("✅ NoDox finalizado.")
 
